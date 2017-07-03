@@ -29,7 +29,7 @@ public class SQLiteDatabase extends Database
     // String for a Table, Maybe store this somewhere else
     // public String SQLiteCreatePlayerTable
     private String SQLiteCreatePlayerTable = "CREATE TABLE IF NOT EXISTS " + player_table + " (" +
-        "uuid BLOB, " +
+        "uuid BINARY(16), " +
         "player TEXT, " +
         "data TEXT)";
 
@@ -113,6 +113,11 @@ public class SQLiteDatabase extends Database
     }
 
     public boolean addPlayer (/*Player Name Here*/ UUID uuid)
+    {
+        return false;
+    }
+    
+    public boolean updatePlayer ()
     {
         return false;
     }
