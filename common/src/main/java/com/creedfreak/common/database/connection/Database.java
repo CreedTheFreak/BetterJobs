@@ -8,6 +8,7 @@ import com.creedfreak.common.utility.SQLReader;
 import com.creedfreak.common.utility.TimeUtil;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,7 +24,6 @@ public abstract class Database {
 
 	static Logger mLogger = Logger.Instance ();
 	final ICraftyProfessions mPlugin;
-	final AbsConfigController mConfiguration;
 
 	private int mNumTables;
 	private int mNumInsertsRan;
@@ -33,11 +33,10 @@ public abstract class Database {
 	 * The primary constructor for a database connection.
 	 *
 	 * @param plugin The plugin to obtain resources from.
-	 * @param config The configurations of the plugin.
 	 */
-	public Database (ICraftyProfessions plugin, AbsConfigController config) {
+	// TODO Remove the dependency on the plugin!
+	public Database (ICraftyProfessions plugin) {
 		mPlugin = plugin;
-		mConfiguration = config;
 
 		mNumTables = 0;
 		mNumInsertsRan = 0;
@@ -230,9 +229,6 @@ public abstract class Database {
 	 * */
 	private boolean checkDBExists () {
 		boolean tablesExist = false;
-//		Connection connection = this.dbConnect ();
-//		PreparedStatement statement = null;
-//		ResultSet resultSet = null;
 
 		try (Connection connection = this.dbConnect ();
 			PreparedStatement statement = connection.prepareStatement (QueryLib.checkDBEstablished);
@@ -245,5 +241,19 @@ public abstract class Database {
 		}
 		
 		return tablesExist;
+	}
+	
+	/**
+	 * Fetch a jar resource as an input stream.
+	 * @param resource The resource path to load.
+	 * @return The input stream returned from the class path.
+	 */
+	private InputStream fetchJarResource (String resource)
+	{
+		InputStream in = getClass ().getResourceAsStream (resource);
+		if (in == null) {
+			mLogger.Error (DATABASE_PREFIX, "Could not fetch resource from classpath: " + resource);
+		}
+		return in;
 	}
 }

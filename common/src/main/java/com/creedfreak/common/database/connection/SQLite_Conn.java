@@ -1,6 +1,5 @@
 package com.creedfreak.common.database.connection;
 
-import com.creedfreak.common.AbsConfigController;
 import com.creedfreak.common.ICraftyProfessions;
 
 import java.io.File;
@@ -21,8 +20,8 @@ public class SQLite_Conn extends Database {
 	 *
 	 * @param plugin The plugin to retrieve resources from.
 	 */
-	public SQLite_Conn (ICraftyProfessions plugin, AbsConfigController config) {
-		super (plugin, config);
+	public SQLite_Conn (ICraftyProfessions plugin) {
+		super (plugin);
 	}
 
 	/**
@@ -31,6 +30,7 @@ public class SQLite_Conn extends Database {
 	 * @return The connection to the database
 	 */
 	public synchronized Connection dbConnect () {
+		// TODO: Handle fetching this file only once.
 		File dataFolder = new File (mPlugin.getResourceFile (), SQLITE_DB_NAME);
 
 		if (!dataFolder.exists ()) {
