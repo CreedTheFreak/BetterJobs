@@ -31,7 +31,7 @@ public interface ICraftyProfessions {
 	/**
 	 * Get the Configuration of the Plugin
 	 */
-	AbsConfigController getConfigController ();
+	IConfiguration getConfigController ();
 
 	AbsCmdController getCmdController ();
 

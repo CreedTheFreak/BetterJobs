@@ -1,7 +1,5 @@
 package com.creedfreak.common.database.connection;
 
-import com.creedfreak.common.AbsConfigController;
-import com.creedfreak.common.ICraftyProfessions;
 import com.creedfreak.common.database.queries.QueryLib;
 import com.creedfreak.common.utility.Pair;
 import org.mariadb.jdbc.MariaDbPoolDataSource;
@@ -20,24 +18,30 @@ public class MySQL_Conn extends Database {
 	/**
 	 * The primary constructor for a MySQL/MariaDB Connection
 	 *
-	 * @param plugin - The plugin to grab resources from
 	 * @param hostName - The hostname of the database
 	 * @param port The port in which to access the database
 	 * @param db - The database name to use from the host
 	 * @param user - The user in which to login with
 	 * @param identifier - The database user's password
 	 */
-	public MySQL_Conn (ICraftyProfessions plugin, AbsConfigController config,
-	                   String hostName, int port, String db, String user, String identifier) {
-		super (plugin, config);
-		
-		String url = "jdbc:mysql://" + hostName + ":" + port + "/" + db + "?maxPoolSize=8";
-		mConnectionPool = new MariaDbPoolDataSource (url);
+	public MySQL_Conn (String hostName, int port, String db, String user, String identifier) {
+
+		this ("jdbc:mysql://" + hostName + ":" + port + "/" + db + "?maxPoolSize=8", user, identifier);
+	}
+
+	/**
+	 * Construct a MySQL connection by connection string.
+	 *
+	 * @param connectionString The connection string to use for DB Connection.
+	 * @param user The user profile of the database.
+	 * @param identifier The users password to log into the database.
+	 */
+	public MySQL_Conn (String connectionString, String user, String identifier) {
+		mConnectionPool = new MariaDbPoolDataSource (connectionString);
 
 		try {
 			mConnectionPool.setUser (user);
 			mConnectionPool.setPassword (identifier);
-
 		} catch (SQLException except) {
 			mLogger.Error (Database.DATABASE_PREFIX, "Could not set the database " +
 					"user or password. State: " + except.getSQLState ());

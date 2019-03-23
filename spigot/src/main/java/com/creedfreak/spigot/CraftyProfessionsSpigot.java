@@ -1,6 +1,6 @@
 package com.creedfreak.spigot;
 
-import com.creedfreak.common.AbsConfigController;
+import com.creedfreak.common.IConfiguration;
 import com.creedfreak.common.ICraftyProfessions;
 import com.creedfreak.common.commands.AbsCmdController;
 import com.creedfreak.common.container.PlayerManager;
@@ -242,7 +242,7 @@ public class CraftyProfessionsSpigot extends JavaPlugin implements ICraftyProfes
 	/**
 	 * Get the Configuration Object of the Plugin
 	 */
-	public AbsConfigController getConfigController () {
+	public IConfiguration getConfigController () {
 		return null;
 	}
 

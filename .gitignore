@@ -89,3 +89,6 @@ gradle-app.setting
 
 # Any and all local library files
 lib/
+
+# Utility files added  by dependencies
+.attach*

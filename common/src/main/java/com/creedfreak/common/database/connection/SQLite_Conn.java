@@ -14,14 +14,15 @@ public class SQLite_Conn extends Database {
 	private final String SQLITE_TABLE_STMTS = "sql_files/sqlite_create_tables.sql";
 
 	private Connection mConnection;
+	private File mDataFolder;
 
 	/**
 	 * The default constructor.
 	 *
-	 * @param plugin The plugin to retrieve resources from.
+	 * @param dataFolder The folder where the SQLite database lives.
 	 */
-	public SQLite_Conn (ICraftyProfessions plugin) {
-		super (plugin);
+	public SQLite_Conn (File dataFolder) {
+		mDataFolder = dataFolder;
 	}
 
 	/**
@@ -31,7 +32,7 @@ public class SQLite_Conn extends Database {
 	 */
 	public synchronized Connection dbConnect () {
 		// TODO: Handle fetching this file only once.
-		File dataFolder = new File (mPlugin.getResourceFile (), SQLITE_DB_NAME);
+		File dataFolder = new File (mDataFolder, SQLITE_DB_NAME);
 
 		if (!dataFolder.exists ()) {
 			try {

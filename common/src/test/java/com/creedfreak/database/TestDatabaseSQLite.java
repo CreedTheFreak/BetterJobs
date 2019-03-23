@@ -9,5 +9,5 @@ import org.junit.jupiter.api.TestInstance;
 @DisplayName ("Test SQLite Database")
 public class TestDatabaseSQLite
 {
-	private Database mDatabase = new SQLite_Conn ();
+	// private Database mDatabase = new SQLite_Conn ();
 }

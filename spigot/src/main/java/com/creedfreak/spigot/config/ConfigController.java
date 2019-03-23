@@ -1,6 +1,6 @@
 package com.creedfreak.spigot.config;
 
-import com.creedfreak.common.AbsConfigController;
+import com.creedfreak.common.IConfiguration;
 import com.creedfreak.common.exceptions.ConfigNotFoundException;
 import com.creedfreak.common.professions.TableType;
 import com.creedfreak.common.utility.Logger;
@@ -21,7 +21,8 @@ import java.util.Map;
  * Most if not all config setup and parsing for the main
  * config file will happen through this class.
  */
-public class ConfigController extends AbsConfigController {
+// TODO: Refactor this whole class. I should not have a Catch All Exception!
+public class ConfigController implements IConfiguration {
 
 	private static final String systemPrefix = "Config";
 

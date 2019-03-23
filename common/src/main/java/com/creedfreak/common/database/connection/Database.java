@@ -1,14 +1,12 @@
 package com.creedfreak.common.database.connection;
 
-import com.creedfreak.common.AbsConfigController;
-import com.creedfreak.common.ICraftyProfessions;
 import com.creedfreak.common.database.queries.QueryLib;
 import com.creedfreak.common.utility.Logger;
+import com.creedfreak.common.utility.ResourceFinder;
 import com.creedfreak.common.utility.SQLReader;
 import com.creedfreak.common.utility.TimeUtil;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,7 +21,6 @@ public abstract class Database {
 	private static final String SQL_INSERT_STMT = "INSERT INTO";
 
 	static Logger mLogger = Logger.Instance ();
-	final ICraftyProfessions mPlugin;
 
 	private int mNumTables;
 	private int mNumInsertsRan;
@@ -31,12 +28,9 @@ public abstract class Database {
 
 	/**
 	 * The primary constructor for a database connection.
-	 *
-	 * @param plugin The plugin to obtain resources from.
 	 */
 	// TODO Remove the dependency on the plugin!
-	public Database (ICraftyProfessions plugin) {
-		mPlugin = plugin;
+	public Database () {
 
 		mNumTables = 0;
 		mNumInsertsRan = 0;
@@ -116,18 +110,18 @@ public abstract class Database {
 	 *
 	 * @return true or false depending on if the database has been initialized with no errors.
 	 * */
-	public boolean initializeDatabase () {
+	public boolean initializeDatabase (String resourceCreateTables, String resourceInsertData) {
 		boolean createSuccess, insertSuccess, retVal = false;
 		long initialTime = System.nanoTime ();
 		DecimalFormat timeFormat = new DecimalFormat ("#0.00");
 
 		if (!checkDBExists ()) {
-			createSuccess = createTables ();
+			createSuccess = createTables (resourceCreateTables);
 
 			if (createSuccess) {
 				mLogger.Info (DATABASE_PREFIX, "Total number of create table statements ran: " + mNumTables);
 
-				insertSuccess = insertIntoTables ();
+				insertSuccess = insertIntoTables (resourceInsertData);
 
 				if (insertSuccess) {
 					mLogger.Info (DATABASE_PREFIX, "The database has been created and the required data has been inserted!");
@@ -145,9 +139,16 @@ public abstract class Database {
 	}
 
 	/**
+	 * Default initialize database method using the internal database files.
+	 */
+	public boolean initializeDatabase () {
+		return initializeDatabase (this.getCreateTableStmts (), SQL_INSERT_STATEMENTS);
+	}
+
+	/**
 	 * This method will create the database tables/entities.
 	 */
-	protected boolean createTables () {
+	protected boolean createTables (String createTableStmts) {
 		SQLReader reader = new SQLReader ();
 		Connection connection = this.dbConnect ();
 		PreparedStatement statement = null;
@@ -155,7 +156,7 @@ public abstract class Database {
 		String sqlStmt;
 
 		try {
-			reader.openReader (mPlugin.openResource (this.getCreateTableStmts ()));
+			reader.openReader (ResourceFinder.fetchResource  (createTableStmts));
 			sqlStmt = reader.readStatement ();
 
 			while (!sqlStmt.equals (SQLReader.EOF)) {
@@ -186,7 +187,7 @@ public abstract class Database {
 	 *
 	 * @return True or false depending of if the operation was successful.
 	 */
-	private boolean insertIntoTables () {
+	private boolean insertIntoTables (String insertStmts) {
 		boolean retVal;
 		Connection connection = this.dbConnect ();
 		SQLReader reader = new SQLReader ();
@@ -194,7 +195,7 @@ public abstract class Database {
 		String sqlStmt;
 
 		try {
-			reader.openReader (mPlugin.openResource (SQL_INSERT_STATEMENTS));
+			reader.openReader (ResourceFinder.fetchResource (insertStmts));
 			sqlStmt = reader.readStatement ();
 
 			while (!sqlStmt.equals (SQLReader.EOF)) {
@@ -241,19 +242,5 @@ public abstract class Database {
 		}
 		
 		return tablesExist;
-	}
-	
-	/**
-	 * Fetch a jar resource as an input stream.
-	 * @param resource The resource path to load.
-	 * @return The input stream returned from the class path.
-	 */
-	private InputStream fetchJarResource (String resource)
-	{
-		InputStream in = getClass ().getResourceAsStream (resource);
-		if (in == null) {
-			mLogger.Error (DATABASE_PREFIX, "Could not fetch resource from classpath: " + resource);
-		}
-		return in;
 	}
 }
