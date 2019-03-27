@@ -127,7 +127,7 @@ public class TaskLoadPlayer extends DBTask {
 					except.printStackTrace ();
 				}
 				catch (InterruptedException except) {
-					if (!Thread.currentThread ().isInterrupted ()) {
+					if (Thread.currentThread ().isInterrupted ()) {
 						// If the player is null on interrupt then the player wasn't received.
 						// Thus we still need to get the player, queue up the same task again.
 						if (PlayerManager.Instance ().getPlayer (mPlayerID) == null) {

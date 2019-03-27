@@ -50,8 +50,8 @@ allprojects {
         implementation group: 'net.jcip', name: 'jcip-annotations', version: '1.0'
         
         // Junit Testing Framework
-        testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.3.2'
-        testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.3.2'
+        testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.4.1'
+        testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.4.1'
         testImplementation group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
 
         // Testing Containers Framework

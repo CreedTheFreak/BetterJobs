@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.awaitility.Awaitility.*;
 
 import com.creedfreak.artificial.MockPlayerFactory;
+import com.creedfreak.common.concurrent.database.DatabaseWorkerQueue;
+import com.creedfreak.common.container.IPlayer;
 import com.creedfreak.common.container.PlayerManager;
 import com.creedfreak.common.database.connection.Database;
 import com.creedfreak.common.database.connection.MySQL_Conn;
@@ -27,22 +29,17 @@ import java.util.concurrent.Callable;
 
 @Testcontainers
 @TestInstance (TestInstance.Lifecycle.PER_CLASS)
+@TestMethodOrder (MethodOrderer.OrderAnnotation.class)
 @DisplayName ("Test MySQL Database")
 public class TestDatabaseMySQL
 {
 	@Container
 	private static MariaDBContainer mDBContainer = new MariaDBContainer ();
-
 	private static Database mDatabase;
+	
 	private PlayerManager mPManagerRef = PlayerManager.Instance ();
 	private	Logger mLogger = LoggerFactory.getLogger (TestDatabaseMySQL.class);
-
-	@Test
-	@BeforeAll
-	public void TestContainerRunning () {
-		assertTrue (mDBContainer.isRunning ());
-	}
-
+	
 	@BeforeAll
 	public void Initialize () {
 		mDatabase = new MySQL_Conn (mDBContainer.getJdbcUrl (), mDBContainer.getUsername (), mDBContainer.getPassword ());
@@ -57,8 +54,15 @@ public class TestDatabaseMySQL
 		mDatabase.shutdown ();
 		mDBContainer.close ();
 	}
+	
+	@Test
+	@Order(1)
+	public void TestContainerRunning () {
+		assertTrue (mDBContainer.isRunning ());
+	}
 
 	@Test
+	@Order(2)
 	public void TestDatabaseConstruction () {
 		try (Connection conn = mDatabase.dbConnect ();
 		PreparedStatement prepStmt = conn.prepareStatement ("SELECT * FROM Settings");
@@ -79,6 +83,7 @@ public class TestDatabaseMySQL
 	 * method.
 	 */
 	@Test
+	@Order(3)
 	public void TestMariaDBMultipleConnections () {
 		Connection conn1, conn2, conn3;
 
@@ -93,10 +98,10 @@ public class TestDatabaseMySQL
 		Database.CloseConnection (conn1);
 		Database.CloseConnection (conn2);
 		Database.CloseConnection (conn3);
-
 	}
-
+	
 	@Test
+	@Order(4)
 	public void TestInsertUsers ()
 	{
 		HashMap<String, UUID> playerMap = new HashMap<> ();
@@ -144,54 +149,130 @@ public class TestDatabaseMySQL
 			Database.CloseConnection (conn);
 		}
 	}
-
+	
 	@Test
+	@Order(5)
 	public void TestUserExists () {
 		UUID savedUUID = UUID.randomUUID ();
-		String mockUsername = "CreedTheFreak";
+		String mockUsername = "George Washington";
 
 		mPManagerRef.savePlayer (savedUUID, mockUsername);
 
 		try {
-			mLogger.info ("Waiting on database task condition...");
-			await ().until (userIsAdded (mockUsername));
+			await ().until (UserIsAdded (mockUsername));
+			
+			// Run the load player task after
+			mPManagerRef.loadPlayer (savedUUID);
+			
+			// Wait at most 10sec for condition to be met
+			await ().until (UserIsLoaded (savedUUID));
 		}
 		catch (ConditionTimeoutException except) {
 			mLogger.error ("Added user condition not met by timeout, failing test.");
 			fail ();
-
 		}
-
 	}
-
-
+	
 	/**
 	 * Private Callables tailored for Awaitility
 	 */
-	private Callable<Boolean> userIsAdded (String username) {
-		return new Callable<Boolean> () {
-			public Boolean call () {
-				boolean retVal;
-				Connection conn = mDatabase.dbConnect ();
-				PreparedStatement prepStmt = null;
-				ResultSet resultSet = null;
+	private Callable<Boolean> UserIsAdded (String username) {
+		return () -> {
+			boolean retVal;
+			Connection conn = mDatabase.dbConnect ();
+			PreparedStatement prepStmt = null;
+			ResultSet resultSet = null;
 
-				try {
-					prepStmt = conn.prepareStatement ("SELECT Username FROM Users WHERE Username = ?");
-					prepStmt.setString (1, username);
-					resultSet = prepStmt.executeQuery ();
+			try {
+				prepStmt = conn.prepareStatement ("SELECT Username FROM Users WHERE Username = ?");
+				prepStmt.setString (1, username);
+				resultSet = prepStmt.executeQuery ();
 
-					retVal = resultSet.first ();
-				}
-				catch (SQLException except) {
-					retVal = false;
-				}
-				finally {
-					Database.CloseResources (resultSet, prepStmt);
-					Database.CloseConnection (conn);
-				}
-				return retVal;
+				retVal = resultSet.first ();
 			}
+			catch (SQLException except) {
+				retVal = false;
+			}
+			finally {
+				Database.CloseResources (resultSet, prepStmt);
+				Database.CloseConnection (conn);
+			}
+			return retVal;
 		};
+	}
+	
+	private Callable<Boolean> UserIsLoaded (UUID userID) {
+		return () -> {
+			boolean retVal = false;
+			IPlayer player;
+			
+			player = PlayerManager.Instance ().getPlayerByUUID (userID);
+			// player = mPManagerRef.getPlayerByUUID (userID);
+			if (player != null)
+				retVal = true;
+			return retVal;
+		};
+	}
+	
+//	private Callable<Integer> UsersTableSize () {
+//		return () -> {
+//			Integer size = 0;
+//			Connection conn = mDatabase.dbConnect ();
+//			PreparedStatement prepStmt = null;
+//			ResultSet resultSet = null;
+//
+//			try {
+//				prepStmt = conn.prepareStatement ("SELECT COUNT(*) FROM Users");
+//				resultSet = prepStmt.executeQuery ();
+//
+//				if (resultSet.next ()) {
+//					size = resultSet.getInt (1);
+//				}
+//			}
+//			catch (SQLException except) {
+//				mLogger.error ("Exception: ", except);
+//			}
+//			finally {
+//				Database.CloseResources (resultSet, prepStmt);
+//				Database.CloseConnection (conn);
+//			}
+//
+//			return size;
+//		};
+//	}
+	
+	private Integer UsersTableSize () {
+		int size = 0;
+		Connection conn = mDatabase.dbConnect ();
+		PreparedStatement prepStmt = null;
+		ResultSet resultSet = null;
+		
+		try {
+			prepStmt = conn.prepareStatement ("SELECT COUNT(*) FROM Users");
+			resultSet = prepStmt.executeQuery ();
+			
+			if (resultSet.next ()) {
+				size = resultSet.getInt (1);
+			}
+		}
+		catch (SQLException except) {
+			mLogger.error ("Exception: ", except);
+		}
+		finally {
+			Database.CloseResources (resultSet, prepStmt);
+			Database.CloseConnection (conn);
+		}
+		return size;
+	}
+	
+	private Boolean Test (UUID userID) {
+		boolean retVal = false;
+		IPlayer player;
+		
+		player = PlayerManager.Instance ().getPlayerByUUID (userID);
+		// player = mPManagerRef.getPlayerByUUID (userID);
+		if (player != null)
+			retVal = true;
+		return retVal;
 	}
 }

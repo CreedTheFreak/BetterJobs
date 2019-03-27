@@ -65,7 +65,17 @@ public final class PlayerManager {
 
 		mLogger.Debug (PM_PREFIX, "Initialization of the PlayerManager is completed!");
 	}
-
+	
+	/**
+	 * Returns the number of players within the player manager.
+	 */
+	public Integer size () {
+		return mPlayerList.size ();
+	}
+	
+	/**
+	 * Returns the internal player factory the player manager uses.
+	 */
 	public IPlayerFactory getPlayerFactory () {
 		return mPlayerFactory;
 	}
@@ -156,7 +166,14 @@ public final class PlayerManager {
 	}
 
 	public IPlayer getPlayerByUUID (UUID playerUUID) {
-		return mPlayerList.get (mInternalIDCache.get (playerUUID));
+		Long InternalID = mInternalIDCache.get (playerUUID);
+		IPlayer player = null;
+		
+		if (InternalID != null)
+			player = mPlayerList.get (InternalID);
+		
+		// IPlayer p = mPlayerList.getOrDefault (mInternalIDCache.getOrDefault (playerUUID, null), null);
+		return player;
 	}
 
 	public void cleanupPlayerManager () {

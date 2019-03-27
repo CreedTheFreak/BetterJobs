@@ -43,6 +43,7 @@ public class TaskCheckUserExist extends DBTask {
 				postConditionTask = new TaskSavePlayer (mUserID, resultSet.getString ("Username"));
 			}
 
+			postConditionTask.attachDataPool (mDataPool);
 			this.queuePostConditionTask (postConditionTask);
 		}
 		catch (SQLException except) {
